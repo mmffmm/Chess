@@ -17,11 +17,17 @@ class GameState():
                 self.whiteToMove = True
                 self.moveLog = []
                 
-        
-        def distanceTravel(self):
-                if self == "bR" or self == "bB" or self == "bQ" or self == "wR" or self == "wB" or self == "wQ":
-                        travel_distance = GameState.DIMENSION
-                elif self != "wN" or self != "bN":
-                        travel_distance = 1
+        # This one is not really used, got from youtube.
+                
+        # def distanceTravel(self):
+        #         if self == "bR" or self == "bB" or self == "bQ" or self == "wR" or self == "wB" or self == "wQ":
+        #                 travel_distance = GameState.DIMENSION
+        #         elif self != "wN" or self != "bN":
+        #                 travel_distance = 1
 
-                return travel_distance
+        #         return travel_distance
+        
+        
+        # def presetMove(self):
+        #         piece = []
+        #         piece['wR'] = 
