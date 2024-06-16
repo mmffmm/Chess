@@ -23,7 +23,8 @@ def main():
     screen.fill(p.Color("grey"))
     gs = ChessEngine.GameState()    # Gamestate function, coming from the ChessEngine folder imported.
     clock = p.time.Clock()  #setup the clock
-    
+    move = FadCustom.Move(gs) #init class
+
     loadImages() # p.image.load. ps: only do once, before looping.
 
     '''INITIALIZE THE VALUE RETURNED FROM FADCUSTOM'''
@@ -43,9 +44,9 @@ def main():
                      if e.button == 1:
                           mouse_clicked += 1
                           if mouse_clicked == 1:
-                               mouse_clicked, mouse_x, mouse_y, possible_dropped_square = FadCustom.Move.movement_pickup()
+                               mouse_clicked, mouse_x, mouse_y, possible_dropped_square = move.movement_pickup()
                           elif mouse_clicked == 2:
-                               gs, hasMoved, mouse_clicked = FadCustom.Move.movement_drop()
+                               gs, hasMoved, mouse_clicked = move.movement_drop()
                                mouse_x = mouse_y = 'a'
                                print(hasMoved)
       
