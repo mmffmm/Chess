@@ -31,7 +31,7 @@ class Move():
             print("mouse_X = ",self.mouse_x)
             print("mouse_y = ",self.mouse_y)
             self.mouse_clicked = 1
-            self.possible_dropped_square = self.allowableMoveset()
+            self.possible_dropped_square = self._allowableMoveset()
             print(self.pickedup_square)
             print("Possible dropped_square: ",self.possible_dropped_square)
             
@@ -60,11 +60,11 @@ class Move():
 
          return gs, hasMoved, self.mouse_clicked
     
-    def allowableMoveset(self):
+    def _allowableMoveset(self):
         # pickedup_square = gs.board[mouse_y][mouse_x]
         self.possible_dropped_square = []
         #ro = right obstacles, lo = left obstacles, to = top obstacles, bo = bottom obstacles
-        ro, lo, to, bo, bro, blo, tro, tlo = self.checkObstacles() 
+        ro, lo, to, bo, bro, blo, tro, tlo = self._checkObstacles() 
 
         if self.pickedup_square in ("wR","bR","wQ","bQ"): # for Rook, either move X only, or move Y only
             self.possible_dropped_square.extend([[self.mouse_y-i, self.mouse_x] for i in range(1,to)]) # move up
@@ -77,21 +77,24 @@ class Move():
             self.possible_dropped_square.extend([[self.mouse_y+jl, self.mouse_x-jl] for jl in range(1,blo)]) # move bottom left
             self.possible_dropped_square.extend([[self.mouse_y-ik, self.mouse_x+ik] for ik in range(1,tro)]) # move top right
             self.possible_dropped_square.extend([[self.mouse_y-il, self.mouse_x-il] for il in range(1,tlo)]) # move top left
-        elif self.pickedup_square == "wN" or self.pickedup_square == "bN": # for Knight, move 2y and 1x, OR, 2x and 1y
+
+        elif self.pickedup_square in ("wN","bN"): # for Knight, move 2y and 1x, OR, 2x and 1y
             knight_move = [(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(1,-2),(-1,2),(-1,-2)]
             for y,x in knight_move:
                 if 0 <= self.mouse_y + y < 8 and 0 <= self.mouse_x + x < 8:
-                    if self.canEatPiece(self.pickedup_square[0],gs.board[self.mouse_y+y][self.mouse_x+x][0]):
+                    if self._canEatPiece(self.pickedup_square[0],gs.board[self.mouse_y+y][self.mouse_x+x][0]):
                         self.possible_dropped_square.append([self.mouse_y+y, self.mouse_x+x])
-        elif self.pickedup_square == "wK" or self.pickedup_square == "bK": # for King, same as Queen, but dont loop. Only plus 1
+
+        elif self.pickedup_square in ("wK","bK"): # for King, same as Queen, but dont loop. Only plus 1
             for i in [1,0,-1]:
                 for j in [1,0,-1]:
                     if i==0 and j==0:# no movement, so remove
                         continue
                     if 0 <= self.mouse_y + i < 8 and 0 <= self.mouse_x + j < 8:
-                        if self.canEatPiece(self.pickedup_square[0],gs.board[self.mouse_y+i][self.mouse_x+j][0]):
+                        if self._canEatPiece(self.pickedup_square[0],gs.board[self.mouse_y+i][self.mouse_x+j][0]):
                             self.possible_dropped_square.append([self.mouse_y+i, self.mouse_x+j])
-        elif self.pickedup_square == "wp" or self.pickedup_square == "bp": # for pawn, normal move can only move Y positive or negative, depends on colour
+
+        elif self.pickedup_square in ("wp","bp"): # for pawn, normal move can only move Y positive or negative, depends on colour
             pawn_move_up = pawn_move_down = False
             color = 1 if self.pickedup_square[0] == "b" else -1 # not that flexible, can be improved
             if color==1 and self.mouse_y+1<ChessMain.DIMENSION:
@@ -118,7 +121,7 @@ class Move():
              
         return self.possible_dropped_square
     
-    def checkObstacles(self):
+    def _checkObstacles(self):
         #Original obstacle is the board border, the numbers of distance to the side of the obstacle
         #readability
         right_border_distance = ChessMain.DIMENSION
@@ -146,19 +149,19 @@ class Move():
         if "+" in movement:
             for i in range(1,ChessMain.DIMENSION-self.mouse_x):## (1,8)
                 if (gs.board[self.mouse_y][self.mouse_x+i]) != "--":
-                    right_obstacle = i if not self.canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y][self.mouse_x+i][0]) else i+1
+                    right_obstacle = i if not self._canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y][self.mouse_x+i][0]) else i+1
                     break
             for i in range(1,self.mouse_x+1):
                 if gs.board[self.mouse_y][self.mouse_x-i] != "--":
-                    left_obstacle = i if not self.canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y][self.mouse_x-i][0]) else i+1     
+                    left_obstacle = i if not self._canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y][self.mouse_x-i][0]) else i+1     
                     break
             for i in range(1,ChessMain.DIMENSION-self.mouse_y):
                 if gs.board[self.mouse_y+i][self.mouse_x] != "--":
-                    bottom_obstacle = i if not self.canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y+i][self.mouse_x][0]) else i+1 
+                    bottom_obstacle = i if not self._canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y+i][self.mouse_x][0]) else i+1 
                     break
             for i in range(1,self.mouse_y+1):
                 if gs.board[self.mouse_y-i][self.mouse_x] != "--":
-                    top_obstacle = i if not self.canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y-i][self.mouse_x][0]) else i+1
+                    top_obstacle = i if not self._canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y-i][self.mouse_x][0]) else i+1
                     break
             
         if "x" in movement:##can try copy code above, the pattern can be the same maybe
@@ -167,33 +170,33 @@ class Move():
                     bottom_right_obstacle = i
                     break
                 elif gs.board[self.mouse_y+i][self.mouse_x+i] != "--":
-                    bottom_right_obstacle = i if not self.canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y+i][self.mouse_x+i][0]) else i+1
+                    bottom_right_obstacle = i if not self._canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y+i][self.mouse_x+i][0]) else i+1
                     break
             for i in range(1,ChessMain.DIMENSION):
                 if self.mouse_x-i < 0 or self.mouse_y+i > 7:
                     bottom_left_obstacle = i
                     break
                 elif gs.board[self.mouse_y+i][self.mouse_x-i] != "--":
-                    bottom_left_obstacle = i if not self.canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y+i][self.mouse_x-i][0]) else i+1
+                    bottom_left_obstacle = i if not self._canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y+i][self.mouse_x-i][0]) else i+1
                     break
             for i in range(1,ChessMain.DIMENSION):
                 if self.mouse_x+i > 7 or self.mouse_y-i < 0:
                     top_right_obstacle = i
                     break
                 elif gs.board[self.mouse_y-i][self.mouse_x+i] != "--":
-                    top_right_obstacle = i if not self.canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y-i][self.mouse_x+i][0]) else i+1
+                    top_right_obstacle = i if not self._canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y-i][self.mouse_x+i][0]) else i+1
                     break
             for i in range(1,ChessMain.DIMENSION):
                 if self.mouse_x-i < 0 or self.mouse_y-i < 0:
                     top_left_obstacle = i
                     break
                 elif gs.board[self.mouse_y-i][self.mouse_x-i] != "--":
-                    top_left_obstacle = i if not self.canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y-i][self.mouse_x-i][0]) else i+1
+                    top_left_obstacle = i if not self._canEatPiece(self.pickedup_square[0], gs.board[self.mouse_y-i][self.mouse_x-i][0]) else i+1
                     break
             
         return right_obstacle, left_obstacle, top_obstacle, bottom_obstacle, bottom_right_obstacle, bottom_left_obstacle, top_right_obstacle, top_left_obstacle
     
-    def canEatPiece(self,pickedPiece, target):
+    def _canEatPiece(self, pickedPiece, target):
          if pickedPiece == target:
             return False
          else:

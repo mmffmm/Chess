@@ -1,6 +1,6 @@
 import pygame as p
 import ChessEngine
-import FadCustom
+import MoveClass as MoveClass
 
 
 WIDTH = HEIGHT = 400
@@ -23,16 +23,16 @@ def main():
     screen.fill(p.Color("grey"))
     gs = ChessEngine.GameState()    # Gamestate function, coming from the ChessEngine folder imported.
     clock = p.time.Clock()  #setup the clock
-    move = FadCustom.Move(gs) #init class
+    move = MoveClass.Move(gs) #init class
 
     loadImages() # p.image.load. ps: only do once, before looping.
 
-    '''INITIALIZE THE VALUE RETURNED FROM FADCUSTOM'''
+    '''INITIALIZE THE VALUE RETURNED FROM MoveClass'''
     mouse_clicked = 0
     mouse_x = 'a'
     mouse_y = 'a'
     possible_dropped_square = 'a'
-    '''INITIALIZE THE VALUE RETURNED FROM FADCUSTOM'''
+    '''INITIALIZE THE VALUE RETURNED FROM MoveClass'''
 
     #the running part
     running = True
