@@ -3,9 +3,12 @@ import ChessEngine
 import ChessMain
 gs = ChessEngine.GameState()
 
+# will have a counter for how many mouse clicked
+
 class Move():
 
-    def __init__(self, game_state):
+    def __init__(self, game_state, SQ_SIZE):
+        self.move_counter = 0
         self.gs = game_state
         self.mouse_x = 0
         self.mouse_y = 0
@@ -14,15 +17,27 @@ class Move():
         self.mouse_clicked = 0
         self.pickedup_square = ""
         self.possible_dropped_square = []
+        self.rule = Rule(self) # passing the instance of this object, because the Rule class need to access the move counter
+        self.SQ_SIZE = SQ_SIZE
 
-    def movement_pickup(self):
+    def movement_pickup(self, gamestate, mouse_reset = 'N'):
 
+        if mouse_reset != 'N': self.move_counter = 0
+        
+        self.gs = gamestate
         self.mouse_x, self.mouse_y = p.mouse.get_pos()
-        self.mouse_x, self.mouse_y = self.mouse_x//50, self.mouse_y//50
+        self.mouse_x, self.mouse_y = self.mouse_x//self.SQ_SIZE, self.mouse_y//self.SQ_SIZE
         self.pickedup_square = gs.board[self.mouse_y][self.mouse_x]
 
         #  print(mouse_y, mouse_x)
 
+        if self.rule.rule() == True:
+            pass
+        else: 
+            self.mouse_clicked = 0
+            self.possible_dropped_square = []
+            return self.mouse_clicked, self.mouse_x, self.mouse_y, self.possible_dropped_square
+         
         #if didnt pickup anything, reset mouseclicked since didnt move
         if self.pickedup_square == "--":
             self.mouse_clicked = 0
@@ -37,9 +52,11 @@ class Move():
             
         return self.mouse_clicked, self.mouse_x, self.mouse_y, self.possible_dropped_square
 
-    def movement_drop(self):
+    def movement_drop(self, gamestate):
+         
+         self.gs = gamestate
          self.mouse_x2, self.mouse_y2 = p.mouse.get_pos()
-         self.mouse_x2, self.mouse_y2 = self.mouse_x2//50, self.mouse_y2//50
+         self.mouse_x2, self.mouse_y2 = self.mouse_x2//self.SQ_SIZE, self.mouse_y2//self.SQ_SIZE
          self.dropped_square = gs.board[self.mouse_y2][self.mouse_x2]
          self.mouse_clicked = 0
 
@@ -48,9 +65,10 @@ class Move():
              print("passed")
              #only move the piece, if the dropped_square is not the same colour and theres a room.
              if self.dropped_square[0] != self.pickedup_square [0]: #if can be dropped(TRUE)
-                 gs.board[self.mouse_y2][self.mouse_x2] = self.pickedup_square
-                 gs.board[self.mouse_y][self.mouse_x] = "--"
+                 self.gs.board[self.mouse_y2][self.mouse_x2] = self.pickedup_square
+                 self.gs.board[self.mouse_y][self.mouse_x] = "--"
                  hasMoved = True
+                 self.move_counter+=1
              elif self.dropped_square[0] == self.pickedup_square [0]: #if cannot be dropped(FALSE)
                  self.pickedup_square = []
                  hasMoved = False
@@ -58,7 +76,8 @@ class Move():
              self.pickedup_square = []
              hasMoved = False
 
-         return gs, hasMoved, self.mouse_clicked
+         print(self.move_counter)
+         return self.gs, hasMoved, self.mouse_clicked
     
     def _allowableMoveset(self):
         # pickedup_square = gs.board[mouse_y][mouse_x]
@@ -66,18 +85,24 @@ class Move():
         #ro = right obstacles, lo = left obstacles, to = top obstacles, bo = bottom obstacles
         ro, lo, to, bo, bro, blo, tro, tlo = self._checkObstacles() 
 
+
+        # ROOK MOVESET + QUEEN
         if self.pickedup_square in ("wR","bR","wQ","bQ"): # for Rook, either move X only, or move Y only
             self.possible_dropped_square.extend([[self.mouse_y-i, self.mouse_x] for i in range(1,to)]) # move up
             self.possible_dropped_square.extend([[self.mouse_y+j, self.mouse_x] for j in range(1,bo)]) # move down
             self.possible_dropped_square.extend([[self.mouse_y, self.mouse_x+k] for k in range(1,ro)]) # move right
             self.possible_dropped_square.extend([[self.mouse_y, self.mouse_x-l] for l in range(1,lo)]) # move left
-            
+
+
+        # BISHOP MOVESET + QUEEN
         if self.pickedup_square in ("wB","bB","wQ","bQ"): # for Bishop, |x| need to be equal to |y|
             self.possible_dropped_square.extend([[self.mouse_y+jk, self.mouse_x+jk] for jk in range(1,bro)]) # move bottom right
             self.possible_dropped_square.extend([[self.mouse_y+jl, self.mouse_x-jl] for jl in range(1,blo)]) # move bottom left
             self.possible_dropped_square.extend([[self.mouse_y-ik, self.mouse_x+ik] for ik in range(1,tro)]) # move top right
             self.possible_dropped_square.extend([[self.mouse_y-il, self.mouse_x-il] for il in range(1,tlo)]) # move top left
 
+
+        # KNIGHT MOVESET
         elif self.pickedup_square in ("wN","bN"): # for Knight, move 2y and 1x, OR, 2x and 1y
             knight_move = [(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(1,-2),(-1,2),(-1,-2)]
             for y,x in knight_move:
@@ -85,6 +110,8 @@ class Move():
                     if self._canEatPiece(self.pickedup_square[0],gs.board[self.mouse_y+y][self.mouse_x+x][0]):
                         self.possible_dropped_square.append([self.mouse_y+y, self.mouse_x+x])
 
+
+        # KING MOVESET
         elif self.pickedup_square in ("wK","bK"): # for King, same as Queen, but dont loop. Only plus 1
             for i in [1,0,-1]:
                 for j in [1,0,-1]:
@@ -94,6 +121,8 @@ class Move():
                         if self._canEatPiece(self.pickedup_square[0],gs.board[self.mouse_y+i][self.mouse_x+j][0]):
                             self.possible_dropped_square.append([self.mouse_y+i, self.mouse_x+j])
 
+
+        # PAWN MOVESET
         elif self.pickedup_square in ("wp","bp"): # for pawn, normal move can only move Y positive or negative, depends on colour
             pawn_move_up = pawn_move_down = False
             color = 1 if self.pickedup_square[0] == "b" else -1 # not that flexible, can be improved
@@ -201,6 +230,37 @@ class Move():
             return False
          else:
             return True
+
+
+class Rule():
+    def __init__(self, move):
+        self.move = move
+
+    def rule(self):
+        if self._moveTurn()==True: return True
+        else: return False
+        
+    def _moveTurn(self):
+        if self.move.move_counter%2==0:
+            if self.move.pickedup_square[0] == 'w':
+                return True
+        else:
+            if self.move.pickedup_square[0] == 'b':
+                return True
+            
+        return False
+        
+    def _isKingInCheck(self): #WIP
+        pass
+
+    def _gameOver(self): #WIP
+        pass
+
+
+
+            
+    
+
 #test
     
       
